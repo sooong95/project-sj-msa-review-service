@@ -6,7 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import song.sj.dto.member.SaveReviewDto;
+import song.sj.dto.SaveReviewDto;
 import song.sj.service.ReviewService;
 
 import java.nio.file.AccessDeniedException;
@@ -21,18 +21,18 @@ public class ReviewController {
     private final ReviewService reviewService;
 
     @PostMapping("/{shopId}")
-    public ResponseEntity<String> saveReview(@PathVariable("shopId") Long shopId, @ModelAttribute SaveReviewDto dto,
+    public ResponseEntity<String> saveReview(@RequestHeader("X-User-Id") Long memberId, @PathVariable("shopId") Long shopId, @ModelAttribute SaveReviewDto dto,
                                              @RequestParam("image") List<MultipartFile> files) throws AccessDeniedException {
-        reviewService.saveReview(shopId, dto, files);
+        reviewService.saveReview(memberId, shopId, dto, files);
         return new ResponseEntity<>("리뷰 저장 성공!", HttpStatus.CREATED);
     }
 
-    @PatchMapping("/{reviewId}")
+    /*@PatchMapping("/{reviewId}")
     public ResponseEntity<String> updateReview(@PathVariable("reviewId") Long reviewId, @RequestBody SaveReviewDto dto) {
 
         reviewService.updateReview(reviewId, dto);
         return new ResponseEntity<>("성공적으로 리뷰가 변경 되었습니다.", HttpStatus.OK);
-    }
+    }*/
 
     @PostMapping("/{reviewId}/images")
     public ResponseEntity<String> addReviewImage(@PathVariable("reviewId") Long reviewId,
@@ -49,10 +49,10 @@ public class ReviewController {
     }
 
     @DeleteMapping("/{reviewId}")
-    public ResponseEntity<String> deleteReview(@PathVariable("reviewId") Long reviewId, @RequestParam("shopId") Long shopId) {
+    public ResponseEntity<String> deleteReview(@RequestHeader("X-User-Id") Long memberId,@PathVariable("reviewId") Long reviewId, @RequestParam("shopId") Long shopId) {
 
         log.info("리뷰 Id={},shop Id={}", reviewId, shopId);
-        reviewService.deleteReview(reviewId, shopId);
+        reviewService.deleteReview(memberId, reviewId, shopId);
         return new ResponseEntity<>("리뷰가 정상적으로 삭제 되었습니다.", HttpStatus.OK);
     }
 }

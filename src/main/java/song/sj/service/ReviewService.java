@@ -3,24 +3,25 @@ package song.sj.service;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import song.sj.dto.member.SaveReviewDto;
-import song.sj.entity.Order;
-import song.sj.entity.OrderShop;
+import song.sj.dto.SaveReviewDto;
+import song.sj.dto.external_dto.ShopReviewCreatedEventDto;
+import song.sj.dto.external_dto.ShopReviewDeletedEventDto;
 import song.sj.entity.Review;
 import song.sj.entity.ReviewImages;
-import song.sj.repository.OrderRepository;
 import song.sj.repository.ReviewImageRepository;
 import song.sj.repository.ReviewRepository;
-import song.sj.repository.ShopRepository;
+import song.sj.service.feign.OrderServiceFeignClient;
 import song.sj.service.image.ImageFile;
 import song.sj.service.toEntity.ToReviews;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -30,37 +31,37 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final ReviewImageRepository reviewImageRepository;
-    private final OrderRepository orderRepository;
     private final ImageFile imageFile;
-    private final MemberService memberService;
-    private final ShopRepository shopRepository;
+    private final OrderServiceFeignClient orderServiceFeignClient;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    public void saveReview(Long shopId, SaveReviewDto dto, List<MultipartFile> files) throws AccessDeniedException {
+    public void saveReview(Long memberId, Long shopId, SaveReviewDto dto, List<MultipartFile> files) throws AccessDeniedException {
 
-        Order order = findOrder(dto.getOrderId());
-
-        reviewAuthorizationVerification(shopId, order);
+        reviewAuthorizationVerification(shopId, dto.getOrderId());
 
         Review reviewEntity = ToReviews.toReviewsEntity(dto);
         Review review = reviewRepository.save(reviewEntity);
 
-        order.getOrderShopList().forEach(review::orderShopSetting);
+        kafkaTemplate.send("shop-review-topics", shopId.toString(), ShopReviewCreatedEventDto.builder()
+                        .shopId(shopId)
+                        .grade(dto.getGrade())
+                .build());
 
         addReviewImages(files, review);
-        review.addReview(memberService.getMemberFromJwt(), shopRepository.findById(shopId).orElseThrow());
+        review.addReview(memberId, shopId);
 
     }
 
-    private static void reviewAuthorizationVerification(Long shopId, Order order) throws AccessDeniedException {
-        for (OrderShop orderShop : order.getOrderShopList()) {
+    private void reviewAuthorizationVerification(Long shopId, Long orderId) throws AccessDeniedException {
+        /*for (OrderShop orderShop : order.getOrderShopList()) {
             if (!orderShop.getShop().getId().equals(shopId)) {
                 throw new AccessDeniedException("리뷰 권한이 없습니다.");
             }
-        }
-    }
+        }*/
 
-    private Order findOrder(Long orderId) {
-        return orderRepository.findById(orderId).orElseThrow(() -> new EntityNotFoundException("존재하지 않는 주문 입니다."));
+        if (orderServiceFeignClient.reviewAuthorizationVerification(shopId, orderId).getMessage().equals("null")) {
+            throw new AccessDeniedException("리뷰 권한이 없습니다.");
+        }
     }
 
     private void addReviewImages(List<MultipartFile> files, Review review) {
@@ -76,11 +77,12 @@ public class ReviewService {
         }
     }
 
-    public void updateReview(Long id, SaveReviewDto dto) {
+    /*public void updateReview(Long id, SaveReviewDto dto) {
 
         Review review = reviewRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("리뷰를 찾을 수 없습니다."));
 
         if (review.getGrade() != dto.getGrade()) {
+
 
             review.getShop().updateReview(review.getGrade(), dto.getGrade());
             review.changeGrade(dto.getGrade());
@@ -88,7 +90,7 @@ public class ReviewService {
 
         review.changeReviewTitle(dto.getReviewTitle());
         review.changeContent(dto.getContent());
-    }
+    }*/
 
     public void addReviewImages(Long reviewId, List<MultipartFile> files) {
 
@@ -106,17 +108,23 @@ public class ReviewService {
         reviewImageRepository.delete(reviewImages);
     }
 
-    public void deleteReview(Long reviewId, Long shopId) {
+    public void deleteReview(Long memberId, Long reviewId, Long shopId) {
 
         Review review = reviewRepository.findById(reviewId).orElseThrow(() -> new EntityNotFoundException("존재하지 않는 리뷰 입니다."));
         log.info("리뷰 내용={}", review.getReviewTitle());
         /*review.getReviewImagesList().forEach(image -> deleteReviewImages(image.getId()));*/
+
+        if (!Objects.equals(review.getMemberId(), memberId)) {
+            throw new RuntimeException("권한이 없습니다.");
+        }
+        kafkaTemplate.send("shop-review-topics", shopId.toString(), ShopReviewDeletedEventDto.builder()
+                .shopId(shopId)
+                .grade(review.getGrade())
+                .build());
         review.getReviewImagesList().forEach(reviewImageRepository::delete);
 
-        log.info("shop={}", shopRepository.findById(shopId).orElseThrow());
-
-        review.deleteReview(memberService.getMemberFromJwt(), shopRepository.findById(shopId).orElseThrow(() -> new EntityNotFoundException("존재하지 않는 shop 입니다.")));
         reviewRepository.delete(review);
+
         log.info("리뷰 확인={}", review.getReviewTitle());
     }
 }

@@ -1,6 +1,6 @@
 package song.sj.service.toEntity;
 
-import song.sj.dto.member.SaveReviewDto;
+import song.sj.dto.SaveReviewDto;
 import song.sj.entity.Review;
 
 public class ToReviews {

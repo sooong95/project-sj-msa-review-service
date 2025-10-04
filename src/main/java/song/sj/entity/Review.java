@@ -24,20 +24,12 @@ public class Review {
     private String content;
     private double grade = 0;
 
-    @JoinColumn(name = "member_id")
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Member member;
-
-    @JoinColumn(name = "orderShop_id")
-    @ManyToOne(fetch = FetchType.LAZY)
-    private OrderShop orderShop;
+    private Long memberId;
 
     @OneToMany(mappedBy = "review")
     private List<ReviewImages> reviewImagesList = new ArrayList<>();
 
-    @JoinColumn(name = "shop_id")
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Shop shop;
+    private Long shopId;
 
     public Review(String reviewTitle, String content, double grade) {
         this.reviewTitle = reviewTitle;
@@ -45,27 +37,9 @@ public class Review {
         this.grade = grade;
     }
 
-    public void orderShopSetting(OrderShop orderShop) {
-        this.orderShop = orderShop;
-        orderShop.getReviewList().add(this);
-    }
-
-    public void addReview(Member member, Shop shop) {
-        this.member = member;
-        member.getReviewList().add(this);
-        member.reviewCount();
-        shop.getReviewList().add(this);
-        this.shop = shop;
-        shop.addReview(this);
-    }
-
-    public void deleteReview(Member member, Shop shop) {
-        this.member = null;
-        member.getReviewList().remove(this);
-        member.reviewCountReduce();
-        shop.getReviewList().remove(this);
-        this.shop = null;
-        shop.deleteReview(this);
+    public void addReview(Long memberId, Long shopId) {
+        this.memberId = memberId;
+        this.shopId = shopId;
     }
 
     public void addReviewImages(ReviewImages images) {
