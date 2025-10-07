@@ -1,3 +1,4 @@
+/*
 package song.sj;
 
 import jakarta.annotation.PostConstruct;
@@ -26,7 +27,8 @@ public class InitDb {
 
         public void initDb() {
 
-            /*MemberJoinDto memberDto1 = new MemberJoinDto("song1", "song1@nnnn.com", "password", new Address("city", "street", "zipcode"), Role.ROLE_MEMBER);
+            */
+/*MemberJoinDto memberDto1 = new MemberJoinDto("song1", "song1@nnnn.com", "password", new Address("city", "street", "zipcode"), Role.ROLE_MEMBER);
             MemberJoinDto memberDto2 = new MemberJoinDto("song2", "song2@nnnn.com", "password", new Address("city", "street", "zipcode"), Role.ROLE_MEMBER);
             MemberJoinDto memberDto3 = new MemberJoinDto("song3", "song3@nnnn.com", "password", new Address("city", "street", "zipcode"), Role.ROLE_MEMBER);
             MemberJoinDto memberDto4 = new MemberJoinDto("song4", "song4@nnnn.com", "password", new Address("city", "street", "zipcode"), Role.ROLE_MEMBER);
@@ -126,18 +128,22 @@ public class InitDb {
                 public void transferTo(File dest) throws IOException, IllegalStateException {
 
                 }
-            };*/
+            };*//*
 
-            /*em.persist(new ShopCategory("TOP"));
+
+            */
+/*em.persist(new ShopCategory("TOP"));
             em.persist(new ShopCategory("BOTTOM"));
             em.persist(new ShopCategory("SHOES"));
             em.persist(new ShopCategory("OUTER"));
             em.persist(new ShopCategory("BAG"));
             em.persist(new ShopCategory("ACCESSORY"));
             em.persist(new ShopCategory("GRADE"));
-            em.persist(new ShopCategory("REVIEWS"));*/
+            em.persist(new ShopCategory("REVIEWS"));*//*
 
-            /*ItemCategory top = new ItemCategory("TOP");
+
+            */
+/*ItemCategory top = new ItemCategory("TOP");
             ItemCategory bottom = new ItemCategory("BOTTOM");
             ItemCategory shoes = new ItemCategory("SHOES");
             ItemCategory outer = new ItemCategory("OUTER");
@@ -151,9 +157,11 @@ public class InitDb {
             em.persist(outer);
             em.persist(bag);
             em.persist(accessory);
-            em.persist(etc);*/
+            em.persist(etc);*//*
 
-            /*ItemSaveDto item1 = new ItemSaveDto("itemA", "A", 110, 1, "designA", "descriptionA", "A", ItemValue.TOP);
+
+            */
+/*ItemSaveDto item1 = new ItemSaveDto("itemA", "A", 110, 1, "designA", "descriptionA", "A", ItemValue.TOP);
             ItemSaveDto item2 = new ItemSaveDto("itemB", "B", 100, 1, "designB", "descriptionB", "B", ItemValue.TOP);
             ItemSaveDto item3 = new ItemSaveDto("itemC", "C", 110, 3, "designC", "descriptionC", "C", ItemValue.BOTTOM);
             ItemSaveDto item4 = new ItemSaveDto("itemD", "D", 100, 10, "designD", "descriptionD", "D", ItemValue.TOP);
@@ -186,8 +194,10 @@ public class InitDb {
             em.persist(itemEntity2);
             em.persist(itemEntity3);
             em.persist(itemEntity4);
-            em.persist(itemEntity5);*/
+            em.persist(itemEntity5);*//*
+
 
         }
     }
 }
+*/

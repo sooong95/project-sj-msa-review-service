@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Repository;
 import song.sj.entity.QReview;
 import song.sj.entity.Review;
 
@@ -12,6 +13,7 @@ import java.util.List;
 
 import static song.sj.entity.QReview.*;
 
+@Repository
 @RequiredArgsConstructor
 public class ReviewQueryRepositoryImpl implements ReviewQueryRepository {
 
