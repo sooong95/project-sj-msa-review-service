@@ -14,8 +14,8 @@ FROM openjdk:21-jdk-slim
 
 WORKDIR /app
 
-COPY --from=build /app/build/libs/*.jar /app/sj.jar
+COPY --from=build /app/build/libs/*.jar /app/sj-review-service.jar
 
 EXPOSE 8080
 ENTRYPOINT ["java"]
-CMD ["-jar", "sj.jar"]
+CMD ["-jar", "sj-review-service.jar"]
