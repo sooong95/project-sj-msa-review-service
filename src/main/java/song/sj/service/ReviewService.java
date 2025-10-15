@@ -47,7 +47,9 @@ public class ReviewService {
                         .grade(dto.getGrade())
                 .build());
 
-        addReviewImages(files, review);
+        if (files != null) {
+            addReviewImages(files, review);
+        }
         review.addReview(memberId, shopId);
 
     }
