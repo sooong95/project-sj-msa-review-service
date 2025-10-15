@@ -2,6 +2,7 @@ package song.sj.service.query;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,9 @@ public class ReviewQueryServiceImpl implements ReviewQueryService {
     private final MemberServiceFeignClient memberServiceFeignClient;
     
     @Override
+    @Cacheable(cacheNames = "getShopReviews",
+            key = "'shopReviews:shopId:' + #shopId + ':page:' + #pageable.getPageNumber() + ':size:' + #pageable.getPageSize()",
+            cacheManager = "getShopReviewsCacheManager")
     public PageResponseDto<ReviewResponseDto> getShopReviews(Long shopId, Pageable pageable) {
 
         Page<Review> shopReviews = getReviews(shopId, pageable);
