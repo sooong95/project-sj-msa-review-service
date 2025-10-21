@@ -24,7 +24,6 @@ public class ReviewQueryController {
     @GetMapping("/{shopId}/reviews")
     public ResponseEntity<PageResponseDto<ReviewResponseDto>> getShopReviews(
             @PathVariable("shopId") Long shopId,
-            /*@PageableDefault(page = 0, size = 10*//*, sort = "reviewId", direction = Sort.Direction.DESC*//*)*/
             Pageable pageable) {
         log.info("요청받은 Pageable: page={}, size={}", pageable.getPageNumber(), pageable.getPageSize());
         return new ResponseEntity<>(reviewQueryService.getShopReviews(shopId, pageable), HttpStatus.OK);

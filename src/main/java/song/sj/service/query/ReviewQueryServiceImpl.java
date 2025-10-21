@@ -2,6 +2,8 @@ package song.sj.service.query;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,22 +14,27 @@ import song.sj.dto.ReviewResponseDto;
 import song.sj.dto.feign_dto.ReviewUsernameDto;
 import song.sj.entity.Review;
 import song.sj.repository.query.ReviewQueryRepository;
-import song.sj.service.feign.MemberServiceFeignClient;
+import song.sj.service.async.ReviewAsyncService;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@Transactional
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class ReviewQueryServiceImpl implements ReviewQueryService {
 
     private final ReviewQueryRepository reviewQueryRepository;
-    private final MemberServiceFeignClient memberServiceFeignClient;
+    private final ReviewAsyncService reviewAsyncService;
+
+    @Autowired
+    @Qualifier("asyncExecutor")
+    private Executor asyncExecutor;
     
     @Override
     @Cacheable(cacheNames = "getShopReviews",
@@ -35,8 +42,17 @@ public class ReviewQueryServiceImpl implements ReviewQueryService {
             cacheManager = "getShopReviewsCacheManager")
     public PageResponseDto<ReviewResponseDto> getShopReviews(Long shopId, Pageable pageable) {
 
-        Page<Review> shopReviews = getReviews(shopId, pageable);
-        List<ReviewUsernameDto> usernames = getReviewUsernameDtos(shopReviews);
+        CompletableFuture<Page<Review>> reviewsFuture =
+                CompletableFuture.supplyAsync(() -> getReviews(shopId, pageable), asyncExecutor);
+
+        // 리뷰 조회 결과를 받아서 MemberService 비동기 호출
+        CompletableFuture<List<ReviewUsernameDto>> usernamesFuture = reviewsFuture.thenCompose(reviews ->
+                reviewAsyncService.getReviewUsernameDtosAsync(reviews.getContent())
+        );
+
+        // 결과 기다림 join() <- 병렬로 실행
+        Page<Review> shopReviews = reviewsFuture.join();
+        List<ReviewUsernameDto> usernames = usernamesFuture.join();
         log.info("통신 상태 확인하기 = {}", Arrays.toString(usernames.toArray()));
 
         Map<Long, String> finalUsernameMap = getLongStringUsernamesMap(usernames);
@@ -75,13 +91,6 @@ public class ReviewQueryServiceImpl implements ReviewQueryService {
         }
 
         return usernameMap;
-    }
-
-    private List<ReviewUsernameDto> getReviewUsernameDtos(Page<Review> shopReviews) {
-        List<Long> memberIds = shopReviews.getContent().stream()
-                .map(Review::getMemberId).distinct().collect(Collectors.toList());
-
-        return memberServiceFeignClient.getUsernameList(memberIds).getData();
     }
 
     private Page<Review> getReviews(Long shopId, Pageable pageable) {

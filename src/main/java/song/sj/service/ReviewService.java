@@ -47,6 +47,8 @@ public class ReviewService {
                         .grade(dto.getGrade())
                 .build());
 
+        log.info("이미지 파일 확={}", files);
+
         if (files != null) {
             addReviewImages(files, review);
         }
@@ -55,11 +57,6 @@ public class ReviewService {
     }
 
     private void reviewAuthorizationVerification(Long shopId, Long orderId) throws AccessDeniedException {
-        /*for (OrderShop orderShop : order.getOrderShopList()) {
-            if (!orderShop.getShop().getId().equals(shopId)) {
-                throw new AccessDeniedException("리뷰 권한이 없습니다.");
-            }
-        }*/
 
         if (orderServiceFeignClient.reviewAuthorizationVerification(shopId, orderId).getMessage().equals("null")) {
             throw new AccessDeniedException("리뷰 권한이 없습니다.");
@@ -68,16 +65,24 @@ public class ReviewService {
 
     private void addReviewImages(List<MultipartFile> files, Review review) {
 
+        if (files == null || files.isEmpty()) {
+            return;
+        }
+
         try {
             for (MultipartFile file : files) {
+                // 파일이 비어 있는 경우도 스킵
+                if (file.isEmpty()) continue;
+
                 ReviewImages reviewImages = imageFile.serverFile(file, ReviewImages.class);
                 reviewImageRepository.save(reviewImages);
                 review.addReviewImages(reviewImages);
             }
         } catch (IOException e) {
-            log.info("addReviewImages error={}", e.getMessage());
+            log.error("addReviewImages error={}", e.getMessage());
         }
     }
+
 
     /*public void updateReview(Long id, SaveReviewDto dto) {
 

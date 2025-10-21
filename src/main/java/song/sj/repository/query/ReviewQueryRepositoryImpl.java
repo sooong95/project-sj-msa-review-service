@@ -25,9 +25,12 @@ public class ReviewQueryRepositoryImpl implements ReviewQueryRepository {
         List<Review> content = jpaQueryFactory
                 .selectFrom(review)
                 .where(review.shopId.eq(shopId))
+                .orderBy(review.reviewId.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
+
+
 
         Long total = jpaQueryFactory
                 .select(review.count())
